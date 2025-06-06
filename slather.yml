@@ -1,0 +1,10 @@
+coverage_service: html
+output_directory: slather-report
+workspace: YourProject.xcworkspace   # or yourproject.xcodeproj
+scheme: YourSchemeName               # e.g. CalculatorApp
+verbose: true
+ignore:
+  - Carthage
+  - Pods
+  - Tests
+

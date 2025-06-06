@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "36C33EA9-0D18-419A-A8B5-52C5AC16BBA9",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:CalculatorApp.xcodeproj",
+        "identifier" : "C3A2021F2DF1BBC70070DAFE",
+        "name" : "CalculatorAppTests"
+      }
+    }
+  ],
+  "version" : 1
+}

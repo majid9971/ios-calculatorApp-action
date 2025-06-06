@@ -1,0 +1,10 @@
+coverage_service: html
+output_directory: slather-report
+xcodeproj: CalculatorApp.xcodeproj
+scheme: CalculatorApp
+verbose: true
+ignore:
+  - Pods
+  - Carthage
+  - Tests
+
