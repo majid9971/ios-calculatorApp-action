@@ -58,6 +58,9 @@ jobs:
     - name: 🔧 Select Xcode 16.2
       run: sudo xcode-select -s /Applications/Xcode_16.2.app
 
+    - name: 🔍 List available simulators
+      run: xcrun simctl list devices
+
     - name: 🧪 Run unit tests with coverage
       run: |
         xcodebuild clean test \
