@@ -1,0 +1,123 @@
+name: Native iOS CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-ios:
+    runs-on: macos-14
+
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+      PROJECT_NAME: CalculatorApp
+      SCHEME_NAME: CalculatorApp
+      APP_IDENTIFIER: com.cybage.alm
+      TEAM_ID: VB78Y67GX6
+      PROVISIONING_PROFILE_NAME: CybageCI
+      CODE_SIGN_IDENTITY: Apple Distribution
+      KEYCHAIN_PASSWORD: cybage@123456
+
+    steps:
+    - name: ⬇️ Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🔧 Set up Ruby (for Slather)
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.1.2'
+
+    - name: 📦 Install bundler and dependencies
+      run: |
+        gem install bundler
+        bundle install || true
+
+    - name: ✅ Install SwiftLint
+      run: brew install swiftlint
+
+    - name: 🧹 Run SwiftLint
+      run: swiftlint --strict || true
+
+    - name: 🔐 Decode and import certificate
+      run: |
+        echo "${{ secrets.IOS_CERTIFICATE_P12 }}" | base64 --decode > /tmp/certificate.p12
+        security create-keychain -p "${{ env.KEYCHAIN_PASSWORD }}" build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "${{ env.KEYCHAIN_PASSWORD }}" build.keychain
+        security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.IOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign -A
+        security set-key-partition-list -S apple-tool:,apple: -s -k "${{ env.KEYCHAIN_PASSWORD }}" build.keychain
+
+    - name: 📃 Install provisioning profile
+      run: |
+        mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+        echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/${{ env.PROVISIONING_PROFILE_NAME }}.mobileprovision"
+
+    - name: 🧪 Run unit tests with coverage
+      run: |
+        xcodebuild clean test \
+          -project "${{ env.PROJECT_NAME }}.xcodeproj" \
+          -scheme "${{ env.SCHEME_NAME }}" \
+          -destination "platform=iOS Simulator,name=iPhone 15" \
+          -enableCodeCoverage YES
+
+    - name: 📊 Run Slather coverage
+      run: |
+        gem install slather
+        slather coverage --scheme "${{ env.SCHEME_NAME }}" "${{ env.PROJECT_NAME }}.xcodeproj"
+
+    - name: 📝 Generate ExportOptions.plist
+      run: |
+        cat > ExportOptions.plist <<EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>${{ env.TEAM_ID }}</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${{ env.APP_IDENTIFIER }}</key>
+              <string>${{ env.PROVISIONING_PROFILE_NAME }}</string>
+            </dict>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>compileBitcode</key>
+            <false/>
+            <key>uploadBitcode</key>
+            <false/>
+          </dict>
+        </plist>
+        EOF
+
+    - name: 📦 Archive app
+      run: |
+        xcodebuild -project "${{ env.PROJECT_NAME }}.xcodeproj" \
+          -scheme "${{ env.SCHEME_NAME }}" \
+          -archivePath build/${{ env.SCHEME_NAME }}.xcarchive \
+          -configuration Release \
+          CODE_SIGN_STYLE=Manual \
+          DEVELOPMENT_TEAM=${{ env.TEAM_ID }} \
+          PROVISIONING_PROFILE_SPECIFIER=${{ env.PROVISIONING_PROFILE_NAME }} \
+          PRODUCT_BUNDLE_IDENTIFIER=${{ env.APP_IDENTIFIER }} \
+          CODE_SIGN_IDENTITY="${{ env.CODE_SIGN_IDENTITY }}" \
+          archive
+
+    - name: 📤 Export IPA
+      run: |
+        xcodebuild -exportArchive \
+          -archivePath build/${{ env.SCHEME_NAME }}.xcarchive \
+          -exportOptionsPlist ExportOptions.plist \
+          -exportPath build/ipa
+
+    - name: ☁️ Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-artifacts
+        path: |
+          build/ipa/*.ipa
+          slather-report/
