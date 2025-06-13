@@ -61,13 +61,13 @@ jobs:
     - name: 🔍 List available simulators
       run: xcrun simctl list devices
 
-    # - name: 🧪 Run unit tests with coverage
-    #   run: |
-    #     xcodebuild clean test \
-    #       -project "${{ env.PROJECT_NAME }}.xcodeproj" \
-    #       -scheme "${{ env.SCHEME_NAME }}" \
-    #       -destination "platform=iOS Simulator,id=F4589EB7-C948-481F-89DD-2B4F82F0D719" \
-    #       -enableCodeCoverage YES
+    - name: 🧪 Run unit tests with coverage
+      run: |
+        xcodebuild clean test \
+          -project "${{ env.PROJECT_NAME }}.xcodeproj" \
+          -scheme "${{ env.SCHEME_NAME }}" \
+          -destination "platform=iOS Simulator,id=F4589EB7-C948-481F-89DD-2B4F82F0D719" \
+          -enableCodeCoverage YES
 
     - name: 📊 Run Slather coverage
       run: |
