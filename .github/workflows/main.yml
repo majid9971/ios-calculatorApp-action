@@ -69,10 +69,10 @@ jobs:
     #       -destination "platform=iOS Simulator,id=F4589EB7-C948-481F-89DD-2B4F82F0D719" \
     #       -enableCodeCoverage YES
 
-    - name: 📊 Run Slather coverage
-      run: |
-        gem install slather
-        slather coverage --scheme "${{ env.SCHEME_NAME }}" "${{ env.PROJECT_NAME }}.xcodeproj"
+    # - name: 📊 Run Slather coverage
+    #   run: |
+    #     gem install slather
+    #     slather coverage --scheme "${{ env.SCHEME_NAME }}" "${{ env.PROJECT_NAME }}.xcodeproj"
 
     - name: 📝 Generate ExportOptions.plist
       run: |
