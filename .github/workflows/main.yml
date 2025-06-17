@@ -25,18 +25,10 @@ jobs:
     - name: ⬇️ Checkout repository
       uses: actions/checkout@v4
 
-    - name: 🔧 Set up Ruby (for Slather)
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: '3.1.2'
-
     - name: 📦 Install bundler and dependencies
       run: |
-        gem install bundler
+        gem install bundler || true
         bundle install || true
-
-    - name: ✅ Install SwiftLint
-      run: brew install swiftlint
 
     - name: 🧹 Run SwiftLint
       run: swiftlint --strict || true
@@ -55,23 +47,16 @@ jobs:
         mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
         echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/${{ env.PROVISIONING_PROFILE_NAME }}.mobileprovision"
 
-    - name: 🔧 Select Xcode 16.2
-      run: sudo xcode-select -s /Applications/Xcode_16.2.app
-
-    - name: 🔍 List available simulators
-      run: xcrun simctl list devices
-
     - name: 🧪 Run unit tests with coverage
       run: |
         xcodebuild clean test \
           -project "${{ env.PROJECT_NAME }}.xcodeproj" \
           -scheme "${{ env.SCHEME_NAME }}" \
-          -destination "platform=iOS Simulator,id=F4589EB7-C948-481F-89DD-2B4F82F0D719" \
+          -destination "platform=iOS Simulator,name=iPhone 15" \
           -enableCodeCoverage YES
 
     - name: 📊 Run Slather coverage
       run: |
-        gem install slather
         slather coverage --scheme "${{ env.SCHEME_NAME }}" "${{ env.PROJECT_NAME }}.xcodeproj"
 
     - name: 📝 Generate ExportOptions.plist
