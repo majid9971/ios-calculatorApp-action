@@ -33,19 +33,19 @@ jobs:
     - name: 🧹 Run SwiftLint
       run: swiftlint --strict || true
 
-    - name: 🔐 Decode and import certificate
-      run: |
-        echo "${{ secrets.IOS_CERTIFICATE_P12 }}" | base64 --decode > /tmp/certificate.p12
-        security create-keychain -p "${{ env.KEYCHAIN_PASSWORD }}" build.keychain
-        security default-keychain -s build.keychain
-        security unlock-keychain -p "${{ env.KEYCHAIN_PASSWORD }}" build.keychain
-        security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.IOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign -A
-        security set-key-partition-list -S apple-tool:,apple: -s -k "${{ env.KEYCHAIN_PASSWORD }}" build.keychain
+    # - name: 🔐 Decode and import certificate
+    #   run: |
+    #     echo "${{ secrets.IOS_CERTIFICATE_P12 }}" | base64 --decode > /tmp/certificate.p12
+    #     security create-keychain -p "${{ env.KEYCHAIN_PASSWORD }}" build.keychain
+    #     security default-keychain -s build.keychain
+    #     security unlock-keychain -p "${{ env.KEYCHAIN_PASSWORD }}" build.keychain
+    #     security import /tmp/certificate.p12 -k build.keychain -P "${{ secrets.IOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign -A
+    #     security set-key-partition-list -S apple-tool:,apple: -s -k "${{ env.KEYCHAIN_PASSWORD }}" build.keychain
 
-    - name: 📃 Install provisioning profile
-      run: |
-        mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-        echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/${{ env.PROVISIONING_PROFILE_NAME }}.mobileprovision"
+    # - name: 📃 Install provisioning profile
+    #   run: |
+    #     mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+    #     echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/${{ env.PROVISIONING_PROFILE_NAME }}.mobileprovision"
 
     - name: 🧪 Run unit tests with coverage
       run: |
